@@ -77,4 +77,3 @@ def roll():
     except KeyboardInterrupt:
         print("Program stopped by user")
 
-roll()
