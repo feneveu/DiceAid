@@ -1,0 +1,71 @@
+import numpy as np
+import cv2
+
+# Read PNG image - keeping alpha channel
+img = cv2.imread('dice5.png', cv2.IMREAD_UNCHANGED)
+
+# If image has alpha channel (PNG transparency)
+if img.shape[2] == 4:
+    # Convert RGBA to RGB
+    # Create a white background
+    white_background = np.ones((img.shape[0], img.shape[1], 3), np.uint8) * 255
+
+    # Extract alpha channel
+    alpha = img[:, :, 3]
+
+    # Extract BGR channels
+    bgr = img[:, :, 0:3]
+
+    # Create a mask from alpha channel
+    alpha_mask = alpha / 255.0
+
+    # Calculate the foreground images
+    foreground = np.zeros((img.shape[0], img.shape[1], 3), np.uint8)
+    for i in range(3):
+        foreground[:, :, i] = bgr[:, :, i] * alpha_mask
+
+    # Calculate the background image
+    background = white_background * (1 - alpha_mask.reshape(alpha_mask.shape[0], alpha_mask.shape[1], 1))
+
+    # Combine foreground and background
+    img = cv2.add(foreground, background.astype(np.uint8))
+
+cv2.imshow('Original', img)
+
+lower_blue = np.array([0, 0, 0])
+upper_blue = np.array([24, 24, 24])
+dots = cv2.inRange(img, lower_blue, upper_blue)
+
+lower_blue = np.array([0, 0, 0])
+upper_blue = np.array([226, 122, 154])
+upper_side_shape = cv2.inRange(img, lower_blue, upper_blue)
+
+# Count the white dots in the upper_side_shape image
+contours, _ = cv2.findContours(upper_side_shape, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Draw contours and number them
+numbered_image = img.copy()
+valid_dots = []
+
+for contour in contours:
+    area = cv2.contourArea(contour)
+    # Adjust area thresholds based on your dice dots size
+    if 15 < area < 500:  # You might need to adjust these values
+        valid_dots.append(contour)
+        # Get center of contour
+        M = cv2.moments(contour)
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            # Draw the center point and number
+            cv2.circle(numbered_image, (cX, cY), 3, (0, 255, 0), -1)
+            cv2.putText(numbered_image, str(len(valid_dots)), (cX - 10, cY - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+print(f"Number of dots found: {len(valid_dots)}")
+
+cv2.imshow('Upper side shape', upper_side_shape)
+cv2.imshow('Dots', dots)
+cv2.imshow('Numbered Dots', numbered_image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
