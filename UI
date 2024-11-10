@@ -1,0 +1,37 @@
+import tkinter as tk
+from motor import roll
+import sys
+import os
+import subprocess
+
+def new_image():
+    return "/home/artpl/Downloads/test.png"
+    
+def function():
+    roll()
+    
+    
+root = tk.Tk()
+root.title("DiceAid")
+root.geometry("800x400")
+root.configure(bg="white")
+
+diceAid_image = tk.PhotoImage(file='/home/artpl/images/DiceAid2.png')
+diceAid = tk.Label(root, image=diceAid_image, bg='white')
+diceAid.place(x=80,y=0)
+
+
+button = tk.Button(root, text='Roll',font=("Trebuchet MS",30), height=3, width=13, command=function)
+button.place(x=50,y=200)
+
+    
+score_label = tk.Label(root, text="Score: ", bg='white', font=("Trebuchet MS",28,'normal'))
+score_label.place(x=70,y=150)
+
+file = new_image()
+image = tk.PhotoImage(file=file)
+label = tk.Label(root, image=image)
+
+label.place(x=450,y=100)
+
+root.mainloop()
